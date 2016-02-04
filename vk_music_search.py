@@ -2,6 +2,7 @@ import vk
 from vk_auth import Auth
 from time import sleep
 from collections import defaultdict
+from random import randint
 
 # period = 25
 # time_to_rate = 20
@@ -40,23 +41,55 @@ def loadData(file):
     with open(file, 'rb') as f:
         return pickle.load(f)
 
-def add_users(users, city_id, dict):
+def add_users(users, dict, city_id, city_title: str = ""):
     for item in dict:
+        if city_title != ""\
+                and item.get("city") is not None\
+                and item.get("city").get("title") != city_title:
+            continue
         users[city_id].add(item["id"])
+    print("users now: ", len(users[city_id]))
 
+def char_range(c1, c2):
+    """Generates the characters from `c1` to `c2`, inclusive."""
+    for c in range(ord(c1), ord(c2)+1):
+        yield chr(c)
 
-def find_users(city_id, users: defaultdict):
+def find_users(users: defaultdict, city_id, city_title):
     response = vkapi.users.search(city = city_id
-                                   , v="5.44"
+                                  , count = 1000
+                                  , v="5.44"
     )
-    # print(response)
+    sleep(0.4)
     count = response["count"]
-    if count > 1000:
-        # while len(users[city_id]) != count:
-        add_users(users, city_id, response["items"])
+    if count == 0:
+        print ("no users")
+        return
+    if abs(count - len(users[city_id])) * 100 / count > 5:
+        print(users[city_id])
+        print( "percent: " , abs(count - len(users[city_id])) * 100 / count, end=' ')
+        if count > 1000:
+            users_before = set(users[city_id])
+            for user_id in users_before:
+                try:
+                    response = vkapi.friends.get( user_id = user_id
+                                                  , order = "random"
+                                                  , fields = "city"
+                                                  , v="5.44")
+                except vk.exceptions.VkAPIError as err:
+                    print(err)
+                    users[city_id].discard(user_id)
+                    continue
+
+                add_users(users, response["items"], city_id, city_title)
+                print(response["items"])
+                dumpData(users,usersFile)
+                sleep(randint(9,15))
+        # else:
+            # add_users(users, city_id, response["items"])
+            # print(count)
     else:
-        add_users(users, city_id, response["items"])
-        print(count)
+        print ("City is exists")
 
 if __name__ == "__main__":
     init_vk_api()
@@ -77,15 +110,16 @@ if __name__ == "__main__":
         sleep(0.2)
         print(count)
 
+
+    users = defaultdict()
     users = loadData(usersFile)
-    for city in users.keys():
-        print(city, ": ", users[city])
-    dumpData(cities, citiesFile)
-    #
-    # for city in cities:
-    #     print(city["title"], "(", city["id"], "): ", end="")
-    #     city_id = city["id"]
-    #     users[city_id] = set()
-    #     find_users(city["id"], users)
-    #     dumpData(users,file)
-    #     sleep(6)
+
+    for city in cities:
+        print(city["title"], ": ", end="")
+        city_id = city["id"]
+        if users.get(city_id) == None:
+            users[city_id] = set()
+            dumpData(users,usersFile)
+        find_users(users, city["id"], city["title"])
+        dumpData(users,usersFile)
+        print()
