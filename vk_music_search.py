@@ -84,6 +84,9 @@ def find_users(users: defaultdict, city_id, city_title):
                 add_users(users, response["items"], city_id, city_title)
                 print(response["items"])
                 dumpData(users,usersFile)
+                if abs(count - len(users[city_id])) * 100 / count < 5:
+                    print("less then 3% ")
+                    break
                 sleep(randint(9,15))
         # else:
             # add_users(users, city_id, response["items"])
