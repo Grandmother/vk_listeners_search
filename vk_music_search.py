@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
     if ( len(cities) != get_cities_count_in_region(region_id) ):
         get_cities(cities, region_id)
-        dumpData(cities, citiesFile)
+
 
     if (os.stat(usersFile).st_size == 0):
         users = defaultdict()
