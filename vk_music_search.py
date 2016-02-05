@@ -130,8 +130,8 @@ def get_cities(cities, region_id: int):
                                  , v="5.44")
         for city in response["items"]:
             city_id = city["id"]
-            if cities.get(city_id) == None:
-                cities[city_id] = defaultdict()
+            if cities is None or cities.get(city_id) == None:
+                cities[city_id] = defaultdict
                 cities[city_id]["title"] = city["title"]
                 cities[city_id]["uc"] = get_city_users_count(city_id)
                 cities[city_id]["id"] = city_id
@@ -150,12 +150,15 @@ if __name__ == "__main__":
     init_vk_api()
 
     if (os.stat(citiesFile).st_size == 0):
-        cities = defaultdict()
+        cities = defaultdict
         dumpData(cities, citiesFile)
     cities = loadData(citiesFile)
 
-    if ( len(cities) != get_cities_count_in_region(region_id) ):
+    if (cities is None) or ( len(cities) != get_cities_count_in_region(region_id) ):
         get_cities(cities, region_id)
+    else:
+        print(type(cities))
+        print(cities)
 
 
     if (os.stat(usersFile).st_size == 0):
