@@ -6,44 +6,26 @@ from time import sleep
 from collections import defaultdict
 from random import randint
 import pickle
-import pprint
 import os
+
+from accounts_pool import Pool
+from account import Account
 
 # period = 25
 # time_to_rate = 20
 period = 2
 time_to_rate = 20
 
+global pool
 
-vk_user_id = 225002811
-# vk_user_phone = "+79518248241"
-# vk_user_pass = "RybakovVk_32"
-vk_user_phone = "+79167174642"
-vk_user_pass = "RybakovVk_32"
 
-app_id = 3517309
+app_id = 
 scope = 278527
 
 usersFile = "usersBase"
 citiesFile = "citiesBase"
 neededCities = "neededCities"
-
-def init_vk_api():
-    global vkapi
-
-    vk_access_token = "7039f99746757ea44124f9d7e62c3f439d1a5b119beaade3daa720b1529704ed44c4d940c88105baa4f8c"
-
-    try:
-        session = vk.Session(access_token=vk_access_token)
-        vkapi = vk.API(session)
-        vkapi.users.get(user_id=1)
-    except:
-        vk_auth = Auth(vk_user_phone, vk_user_pass, app_id, str(scope))
-        vk_access_token, uid = vk_auth()
-
-        session = vk.Session(access_token=vk_access_token)
-        vkapi = vk.API(session)
-
+accountsFile = "accounts.json"
 
 def dumpData(users, file):
     with open(file, 'wb') as f:
@@ -54,7 +36,7 @@ def loadData(file):
         return pickle.load(f)
 
 def get_city_users_count(city_id: int):
-    response = vkapi.users.search(city = city_id
+    response = pool.get_next_api().users.search(city = city_id
                                   , count = 1
                                   , v="5.44"
                                   )
@@ -107,7 +89,7 @@ def char_range(c1, c2):
         yield chr(c)
 
 def find_users(users: defaultdict, city_id, cities, needed_cities):
-    response = vkapi.users.search(city = city_id
+    response = pool.get_next_api().users.search(city = city_id
                                   , count = 1000
                                   , v="5.44"
     )
@@ -139,7 +121,7 @@ def find_users(users: defaultdict, city_id, cities, needed_cities):
 
         for user_id in users_before:
             try:
-                response = vkapi.friends.get( user_id = user_id
+                response = pool.get_next_api().friends.get( user_id = user_id
                                               , order = "random"
                                               , fields = "city"
                                               , v="5.44")
@@ -155,12 +137,12 @@ def find_users(users: defaultdict, city_id, cities, needed_cities):
             if (abs(count - len(users[city_id]["users"])) * 100 / count < 5) or (len(users[city_id]["users"]) > count):
                 print("less then 3% ")
                 break
-            sleep(randint(5,10))
+            sleep(randint(1,3))
     else:
         print ("City is exists")
 
 def get_cities_count_in_region(region_id: int):
-    response = vkapi.database.getCities(country_id = 1
+    response = pool.get_next_api().database.getCities(country_id = 1
                              , region_id = region_id
                              , need_all = 1
                              , offset = 0
@@ -172,7 +154,7 @@ def get_region_cities(cities, needed_cities):
     count = 1000
     offset = 0
     while count == 1000:
-        response = vkapi.database.getCities(country_id = 1
+        response = pool.get_next_api().database.getCities(country_id = 1
                                  , region_id = region_id
                                  # , need_all = 1
                                  , offset = offset
@@ -214,13 +196,39 @@ def get_cities(cities: defaultdict, region_id: int, users, needed_cities):
                 dumpData(users,usersFile)
             find_users(users, city["id"], cities, needed_cities)
             dumpData(users,usersFile)
-            sleep(randint(5,13))
+            sleep(randint(1,3))
     return cities
 
 region_id = 1077676
 
 if __name__ == "__main__":
-    init_vk_api()
+    # init_vk_api()
+
+    global pool
+    if os.stat(accountsFile).st_size == 0:
+        raise Exception("""Please fill the file {} in format:
+                 {
+                    [
+                    {"login":"user_login", "passwd":"user_password", "access_token":""}
+                    ]
+                 }""".format(accountsFile))
+
+    accounts = list()
+    with open(accountsFile) as f:
+        accounts = json.load(f)
+
+    pool = Pool()
+    for i in range(0, len(accounts)):
+        if accounts[i]["access_token"] == "":
+            pool.add_account(Account(accounts[i]["login"], accounts[i]["passwd"], app_id, scope))
+            accounts[i]["access_token"] = pool.get_account(accounts[i]["login"]).access_token
+            dumpData(accounts, accountsFile)
+        else:
+            print("access_token(", accounts[i]["login"], "): ", accounts[i]["access_token"])
+            pool.add_account(Account(accounts[i]["login"], accounts[i]["passwd"], app_id, scope, accounts[i]["access_token"]))
+        sleep(6)
+
+    pool.show_all_accounts()
 
     if os.stat(usersFile).st_size == 0:
         users = defaultdict()
@@ -239,9 +247,9 @@ if __name__ == "__main__":
 
     get_region_cities(cities, needed_cities)
 
-    print("needed cities:")
-    for city in needed_cities:
-        print (cities[city]["id"], ": ", cities[city]["title"], cities[city]["uc"])
+    # print("needed cities:")
+    # for city in needed_cities:
+    #     print (cities[city]["id"], ": ", cities[city]["title"], cities[city]["uc"])
 
     get_cities(cities, region_id, users, needed_cities)
 

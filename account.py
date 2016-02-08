@@ -12,15 +12,24 @@ class Account:
         self._app_id = app_id
         self._scope = scope
 
-        if access_token != "":
-            self._acess_token = access_token
+        self._access_token = access_token
 
         self.get_access()
 
-    @property.getter
+    @property
     def vkapi(self):
-        if self.check_access():
-            return self.vkapi()
+        if not self.check_access():
+            self.get_access()
+
+        return self._vkapi
+
+    @property
+    def login(self):
+        return self._login
+
+    @property
+    def access_token(self):
+        return self._access_token
 
     def check_access(self) -> bool:
         #Проверим, сработал ли acess_token
@@ -32,14 +41,20 @@ class Account:
         return True
 
     def get_access(self):
-        self._session = vk.Session(access_token=self._access_token)
-        self._vkapi = vk.API(self._session)
+        if self._access_token != "":
+            self._session = vk.Session(access_token=self._access_token)
+            self._vkapi = vk.API(self._session)
 
-        if self.check_access():
-            return
+            if self.check_access():
+                return
 
         self._vk_auth = Auth(self._login, self._passwd, self._app_id, str(self._scope))
         self._access_token, uid = self._vk_auth()
 
         session = vk.Session(access_token=self._access_token)
         self._vkapi = vk.API(session, lang='ru')
+        if self.check_access():
+            print("got it for ", self._login)
+            return
+        else:
+            print("can't get access as ", self._login)
