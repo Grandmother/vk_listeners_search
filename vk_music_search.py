@@ -1,7 +1,6 @@
 #!/usr/bin/python3.5
 
 import vk
-from vk_auth import Auth
 from time import sleep
 from collections import defaultdict
 from random import randint
@@ -11,13 +10,7 @@ import os
 from accounts_pool import Pool
 from account import Account
 
-# period = 25
-# time_to_rate = 20
-period = 2
-time_to_rate = 20
-
 global pool
-
 
 app_id = 
 scope = 278527
@@ -78,10 +71,6 @@ def add_users(users, dict, needed_cities):
         # Добавим пользователя
         users[city_id]["users"].add(item["id"])
         users[city_id]["count"] = len(users[city_id]["users"])
-
-    # print("Added:")
-    # for city_id in added_from_cities.keys():
-    #     print(cities[city_id]["title"], ": ", added_from_cities[city_id])
 
 def char_range(c1, c2):
     """Generates the characters from `c1` to `c2`, inclusive."""
@@ -247,15 +236,4 @@ if __name__ == "__main__":
 
     get_region_cities(cities, needed_cities)
 
-    # print("needed cities:")
-    # for city in needed_cities:
-    #     print (cities[city]["id"], ": ", cities[city]["title"], cities[city]["uc"])
-
     get_cities(cities, region_id, users, needed_cities)
-
-    print("needed cities:")
-    for city in cities.items():
-        if city["uc"] > 5000:
-            needed_cities.add(city["id"])
-            print (city["title"], city["uc"])
-    dumpData(needed_cities, neededCities)
