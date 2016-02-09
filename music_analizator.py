@@ -18,8 +18,10 @@ neededCities = "neededCities"
 accountsFile = "accounts.json"
 neededSongs = "neededSongs"
 analizedUsers = "analizedUsers"
+usersSongs = "usersSongs"
 
-app_id = 3517309
+# app_id = 3517309
+app_id = 5283939
 scope = 278527
 
 queries = [
@@ -33,7 +35,9 @@ queries = [
 
 global pool
 
-def get_needed_songs(songs, queries):
+def get_needed_songs(queries):
+    global songs
+
     for query in queries:
         for i in range(0, 3):
             response = pool.get_next_api().audio.search(q = query
@@ -47,40 +51,50 @@ def get_needed_songs(songs, queries):
             for gtd_song in goted_songs:
                 song_id = gtd_song["id"]
                 owner_id = gtd_song["owner_id"]
-                if songs.get((owner_id, song_id)) is None:
-                    songs[(owner_id, song_id)] = defaultdict()
-                    songs[(owner_id, song_id)]["id"] = gtd_song["id"]
-                    songs[(owner_id, song_id)]["owner_id"] = gtd_song["owner_id"]
-                    songs[(owner_id, song_id)]["artist"] = gtd_song["artist"]
-                    songs[(owner_id, song_id)]["title"] = gtd_song["title"]
+                if songs.get(song_id) is None:
+                    songs[song_id] = defaultdict()
+                    songs[song_id]["id"] = gtd_song["id"]
+                    songs[song_id]["owner_id"] = gtd_song["owner_id"]
+                    songs[song_id]["artist"] = gtd_song["artist"]
+                    songs[song_id]["title"] = gtd_song["title"]
             dumpData(songs, neededSongs)
             sleep(1)
         print("Needed songs count: ", len(songs.keys()))
 
-def add_needed_songs(songs, goted_songs):
+def add_song_user(user_id, song_id):
+    global users_songs
+
+    if users_songs.get(user_id) is None:
+        users_songs[user_id] = set()
+    users_songs[user_id].add(song_id)
+    print("User ", user_id, "added")
+    dumpData(users_songs, usersSongs)
+
+def add_needed_songs(user_id, goted_songs):
+    global songs
+
     for goted_song in goted_songs:
         song_id = goted_song["id"]
-        owner_id = goted_song["owner_id"]
 
-        # If song already in our base
-        if songs.get((owner_id, song_id)) is None:
+        # If song not in our base
+        if songs.get(song_id) is None:
             for query in queries:
                 if fuzz.token_set_ratio(goted_song["artist"], query) > 70:
-                    songs[(owner_id, song_id)] = defaultdict()
-                    songs[(owner_id, song_id)]["id"] = goted_song["id"]
-                    songs[(owner_id, song_id)]["owner_id"] = goted_song["owner_id"]
-                    songs[(owner_id, song_id)]["artist"] = goted_song["artist"]
-                    songs[(owner_id, song_id)]["title"] = goted_song["title"]
+                    songs[song_id] = defaultdict()
+                    songs[song_id]["id"] = goted_song["id"]
+                    songs[song_id]["owner_id"] = goted_song["owner_id"]
+                    songs[song_id]["artist"] = goted_song["artist"]
+                    songs[song_id]["title"] = goted_song["title"]
+                    add_song_user(user_id, song_id)
+        else:
+            add_song_user(user_id, song_id)
+
     print("Needed songs count: ", len(songs.keys()))
 
-def analyze_collection(user_id, songs, goted_songs):
-    for gtd_song in goted_songs:
-        if songs.get((gtd_song["owner_id"], gtd_song["id"])) is not None:
-            if users_songs.get(user_id) is None:
-                users_songs[user_id] = set()
-            users_songs[user_id].add((gtd_song["owner_id"], gtd_song["id"]))
+def analyze_users():
+    global users
+    global songs
 
-def analyze_users(users, users_songs, songs):
     # sort cities by users count
     sorted_users = sorted(users.items(), key = lambda x: x[1]["count"], reverse = True)
 
@@ -101,11 +115,13 @@ def analyze_users(users, users_songs, songs):
                     print(ex)
                     continue
             if response["count"] == 0:
+                print("response count is zero: ", response)
                 continue
             goted_songs = response["items"]
-            add_needed_songs(songs, goted_songs)
+
+            add_needed_songs(user, goted_songs)
             dumpData(songs, neededSongs)
-            analyze_collection(user, songs, goted_songs)
+
             analized_users.add(user)
             dumpData(analized_users, analizedUsers)
 
@@ -121,6 +137,7 @@ if __name__ == "__main__":
     global pool
 
     if os.stat(accountsFile).st_size == 0:
+<<<<<<< HEAD
         raise Exception("""Please fill the file {} in format:
                  {
                     [
@@ -148,17 +165,6 @@ if __name__ == "__main__":
 
     pool.show_all_accounts()
 
-    # song_id
-    # owner_id
-    # artist
-    # title
-    songs = dict()
-
-    # user_id
-    # owner_id
-    # song_id
-    users_songs = defaultdict(set)
-
     if os.stat(usersFile).st_size == 0:
         users = defaultdict()
         dumpData(users, usersFile)
@@ -174,13 +180,16 @@ if __name__ == "__main__":
         dumpData(songs, neededSongs)
     songs = loadData(neededSongs)
 
+    if os.stat(usersSongs).st_size == 0:
+        users_songs = defaultdict(set)
+        dumpData(users_songs, usersSongs)
+    users_songs = loadData(usersSongs)
+
     if os.stat(analizedUsers).st_size == 0:
         analized_users = set()
         dumpData(analized_users, analizedUsers)
     analized_users = loadData(analizedUsers)
 
+    # get_needed_songs(queries)
 
-
-    # get_needed_songs(songs, queries)
-
-    analyze_users(users, users_songs, songs)
+    analyze_users()

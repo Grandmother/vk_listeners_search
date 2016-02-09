@@ -210,12 +210,13 @@ if __name__ == "__main__":
     for i in range(0, len(accounts)):
         if accounts[i]["access_token"] == "":
             pool.add_account(Account(accounts[i]["login"], accounts[i]["passwd"], app_id, scope))
-            accounts[i]["access_token"] = pool.get_account(accounts[i]["login"]).access_token
-            dumpData(accounts, accountsFile)
         else:
             print("access_token(", accounts[i]["login"], "): ", accounts[i]["access_token"])
             pool.add_account(Account(accounts[i]["login"], accounts[i]["passwd"], app_id, scope, accounts[i]["access_token"]))
-        sleep(6)
+
+        accounts[i]["access_token"] = pool.get_account(accounts[i]["login"]).access_token
+        dumpData(accounts, accountsFile)
+        sleep(randint(5,7))
 
     pool.show_all_accounts()
 

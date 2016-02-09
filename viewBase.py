@@ -7,6 +7,9 @@ import pprint
 usersFile = "usersBase"
 citiesFile = "citiesBase"
 neededCities = "neededCities"
+neededSongs = "neededSongs"
+analizedUsers = "analizedUsers"
+usersSongs = "usersSongs"
 
 
 
@@ -23,8 +26,24 @@ if os.stat(citiesFile).st_size != 0:
 if os.stat(neededCities).st_size != 0:
     needed_cities = loadData(neededCities)
 
+if os.stat(neededSongs).st_size != 0:
+    needed_songs = loadData(neededSongs)
+
+if os.stat(analizedUsers).st_size != 0:
+    analized_users = loadData(analizedUsers)
+
+if os.stat(usersSongs).st_size != 0:
+    users_songs = loadData(usersSongs)
+
 print("Cities:")
 for city in sorted(cities.values(), key = lambda x : x["uc"], reverse=True):
     city_id = city["id"]
     if city["uc"] != -1 and users.get(city_id) is not None:
         print(city_id, ":\t", city["title"], " = ", len(users[city_id]["users"]), "/", city["uc"])
+
+# print("Users:")
+# for user in users_songs.keys():
+    # print(user, ": ", users_songs[user])
+
+print("Statistics:")
+print("Good users: ", len(users_songs.keys()), " of ", len(analized_users))
