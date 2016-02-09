@@ -8,12 +8,12 @@ class Pool:
         pass
 
     # Добавить аккаунт в пул
-    def add_account(self, user_login: str,
-                 user_passwd: str,
-                 app_id: int,
-                 scope: int):
-        self._accounts.append(Account(user_login, user_passwd, app_id, scope))
-        self._last_used = len(self._accounts) - 1
+    # def add_account(self, user_login: str,
+    #              user_passwd: str,
+    #              app_id: int,
+    #              scope: int):
+    #     self._accounts.append(Account(user_login, user_passwd, app_id, scope))
+    #     self._last_used = len(self._accounts) - 1
 
     def add_account(self, account: Account):
         self._accounts.append(account)
