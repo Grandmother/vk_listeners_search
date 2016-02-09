@@ -79,7 +79,7 @@ def add_needed_songs(user_id, goted_songs):
         # If song not in our base
         if songs.get(song_id) is None:
             for query in queries:
-                if fuzz.token_set_ratio(goted_song["artist"], query) > 70:
+                if fuzz.token_set_ratio(goted_song["artist"], query) > 90:
                     songs[song_id] = defaultdict()
                     songs[song_id]["id"] = goted_song["id"]
                     songs[song_id]["owner_id"] = goted_song["owner_id"]
@@ -100,13 +100,15 @@ def analyze_users():
 
     for city in sorted_users:
         city_users = city[1]["users"]
-        for user in city_users:
-            if user in analized_users:
-                continue
+        # for user in city_users:
+        for user in users_songs.keys():
+            # if user in analized_users:
+            #     continue
             try:
                 response = pool.get_next_api().audio.get(owner_id = user
                                                          , count = 6000
                                                          , v = "5.44")
+                print(response)
             except vk.exceptions.VkAPIError as ex:
                 if ex.code == 201:
                     analized_users.add(user)
@@ -137,7 +139,6 @@ if __name__ == "__main__":
     global pool
 
     if os.stat(accountsFile).st_size == 0:
-<<<<<<< HEAD
         raise Exception("""Please fill the file {} in format:
                  {
                     [
