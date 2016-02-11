@@ -48,15 +48,15 @@ def get_needed_songs(queries):
                                              , v = "5.44")
             count = response["count"]
             goted_songs = response["items"]
-            for gtd_song in goted_songs:
-                song_id = gtd_song["id"]
-                owner_id = gtd_song["owner_id"]
-                if songs.get(song_id) is None:
-                    songs[song_id] = defaultdict()
-                    songs[song_id]["id"] = gtd_song["id"]
-                    songs[song_id]["owner_id"] = gtd_song["owner_id"]
-                    songs[song_id]["artist"] = gtd_song["artist"]
-                    songs[song_id]["title"] = gtd_song["title"]
+            for goted_song in goted_songs:
+                if fuzz.token_set_ratio(goted_song["artist"], query) > 90:
+                    song_id = goted_song["id"]
+                    if songs.get(song_id) is None:
+                        songs[song_id] = defaultdict()
+                        songs[song_id]["id"] = goted_song["id"]
+                        songs[song_id]["owner_id"] = goted_song["owner_id"]
+                        songs[song_id]["artist"] = goted_song["artist"]
+                        songs[song_id]["title"] = goted_song["title"]
             dumpData(songs, neededSongs)
             sleep(1)
         print("Needed songs count: ", len(songs.keys()))
