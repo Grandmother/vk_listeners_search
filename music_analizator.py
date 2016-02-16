@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.4
 
 from accounts_pool import Pool
 from account import Account
@@ -92,6 +92,7 @@ def add_needed_songs(user_id, goted_songs):
     print("Needed songs count: ", len(songs.keys()))
 
 def analyze_users():
+    global analized_users
     global users
     global songs
 
@@ -100,24 +101,29 @@ def analyze_users():
 
     for city in sorted_users:
         city_users = city[1]["users"]
-        # for user in city_users:
-        for user in users_songs.keys():
-            # if user in analized_users:
-            #     continue
+        for user in city_users:
+        #for user in users_songs.keys():
+            if user in analized_users:
+                continue
             try:
                 response = pool.get_next_api().audio.get(owner_id = user
                                                          , count = 6000
                                                          , v = "5.44")
-                print(response)
+                #print(response)
             except vk.exceptions.VkAPIError as ex:
                 if ex.code == 201:
                     analized_users.add(user)
+                    dumpData(analized_users, analizedUsers)
                     continue
                 else:
                     print(ex)
                     continue
             if response["count"] == 0:
+                analized_users.add(user)
+                dumpData(analized_users, analizedUsers)
                 print("response count is zero: ", response)
+                print("Audios URL: https://vk.com/audio" + str(user))
+                print("User URL: https://vk.com/id" + str(user))
                 continue
             goted_songs = response["items"]
 

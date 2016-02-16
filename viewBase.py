@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.4
 
 import pickle
 import os
@@ -44,6 +44,8 @@ for city in sorted(cities.values(), key = lambda x : x["uc"], reverse=True):
 # print("Users:")
 # for user in users_songs.keys():
     # print(user, ": ", users_songs[user])
+
+print("Analized users: ", len(analized_users), "Needed: ", len(analized_users & users_songs.keys()))
 
 print("Statistics:")
 print("Good users: ", len(users_songs.keys()), " of ", len(analized_users))

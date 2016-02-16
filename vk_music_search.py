@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.4
 
 import vk
 from time import sleep
@@ -236,5 +236,4 @@ if __name__ == "__main__":
     needed_cities = loadData(neededCities)
 
     get_region_cities(cities, needed_cities)
-
     get_cities(cities, region_id, users, needed_cities)
